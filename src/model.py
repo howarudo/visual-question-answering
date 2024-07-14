@@ -1,17 +1,20 @@
 import lightning as L
-from src.utils import VQA_criterion, process_pred
+from src.utils import  *
 import torch
+from functools import partial
 from torch.utils.data import DataLoader
 from src.params import *
 
 
 
 class PaliGemmaModelPLModule(L.LightningModule):
-    def __init__(self, config, processor, model):
+    def __init__(self, config, processor, model, train_dataset, val_dataset):
         super().__init__()
         self.config = config
         self.processor = processor
         self.model = model
+        self.train_dataset = train_dataset
+        self.val_dataset = val_dataset
 
         self.batch_size = config.get("batch_size")
 
@@ -59,3 +62,9 @@ class PaliGemmaModelPLModule(L.LightningModule):
         optimizer = torch.optim.AdamW(self.parameters(), lr=self.config.get("lr"))
 
         return optimizer
+
+    def train_dataloader(self):
+        return DataLoader(self.train_dataset, collate_fn=partial(train_collate_fn, processor=self.processor), batch_size=self.batch_size, shuffle=True, num_workers=4)
+
+    def val_dataloader(self):
+        return DataLoader(self.val_dataset, collate_fn=partial(eval_collate_fn, processor=self.processor), batch_size=self.batch_size, shuffle=False, num_workers=4)

@@ -1,15 +1,12 @@
 from src.utils import *
 from tqdm import tqdm
 from src.dataset import VQATrainDataset, VQAValDataset, TestDataset
-from torch.utils.data import DataLoader, Dataset
+from torch.utils.data import DataLoader
 from transformers import AutoProcessor
-from functools import partial
 import torch
 from src.params import *
 import pandas as pd
 import numpy as np
-from PIL import Image
-import cv2
 
 from transformers import PaliGemmaForConditionalGeneration
 from transformers import BitsAndBytesConfig
@@ -49,12 +46,7 @@ def train():
 
     train_dataset = VQATrainDataset(train_df, TRAIN_PATH)
     val_dataset = VQAValDataset(val_df, TRAIN_PATH)
-
     processor = AutoProcessor.from_pretrained(MODEL_REPO_ID)
-
-    train_dataloader = DataLoader(train_dataset, collate_fn=partial(train_collate_fn, processor=processor),batch_size=8, shuffle=True)
-
-    val_dataloader = DataLoader(val_dataset, collate_fn=partial(eval_collate_fn, processor=processor), batch_size=2, shuffle=False)
 
     # use this for Q-LoRa
     bnb_config = BitsAndBytesConfig(
@@ -86,7 +78,7 @@ def train():
         "verbose": True,
     }
 
-    model_module = PaliGemmaModelPLModule(config, processor, model)
+    model_module = PaliGemmaModelPLModule(config, processor, model, train_dataset, val_dataset)
     early_stop_callback = EarlyStopping(monitor="vizwiz_accuracy", patience=10, verbose=False, mode="min")
     torch.set_float32_matmul_precision('high')
 
@@ -115,7 +107,7 @@ def eval():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = PaliGemmaForConditionalGeneration.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN).to(device)
     model.eval()
-    TEST_BATCH_SIZE = 16
+    TEST_BATCH_SIZE = 8
 
     print("Processing samples\n")
     processor = AutoProcessor.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN)

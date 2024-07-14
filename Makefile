@@ -1,12 +1,12 @@
 get_data:
+	@echo "Creating data directory..."
+	@if [ ! -d data ]; then mkdir -p data; fi
 	if [ ! -f ./data/train.zip ]; then gsutil cp gs://dl-common/2024/VQA/train.zip ./data/; fi
 	if [ ! -f ./data/valid.zip ]; then gsutil cp gs://dl-common/2024/VQA/valid.zip ./data/; fi
 	if [ ! -f ./data/train.json ]; then gsutil cp gs://dl-common/2024/VQA/train.json ./data/; fi
 	if [ ! -f ./data/valid.json ]; then gsutil cp gs://dl-common/2024/VQA/valid.json ./data/; fi
 
 setup:
-	@echo "Creating data directory..."
-	@if [ ! -d data ]; then mkdir -p data; fi
 	@echo "Creating submission directory..."
 	@if [ ! -d submission ]; then mkdir -p submission; fi
 	@echo "Creating .env file..."
