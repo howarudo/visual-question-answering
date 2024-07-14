@@ -1,6 +1,6 @@
 from src.utils import *
 from tqdm import tqdm
-from src.dataset import VQATrainDataset, VQAValDataset
+from src.dataset import VQATrainDataset, VQAValDataset, TestDataset
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoProcessor
 from functools import partial
@@ -51,13 +51,10 @@ def train():
     val_dataset = VQAValDataset(val_df, TRAIN_PATH)
 
     processor = AutoProcessor.from_pretrained(MODEL_REPO_ID)
+
     train_dataloader = DataLoader(train_dataset, collate_fn=partial(train_collate_fn, processor=processor),batch_size=8, shuffle=True)
-    input_ids, token_type_ids, attention_mask, pixel_values, labels = next(iter(train_dataloader))
 
     val_dataloader = DataLoader(val_dataset, collate_fn=partial(eval_collate_fn, processor=processor), batch_size=2, shuffle=False)
-    input_ids, attention_mask, pixel_values, answers = next(iter(val_dataloader))
-
-
 
     # use this for Q-LoRa
     bnb_config = BitsAndBytesConfig(
@@ -111,7 +108,7 @@ def train():
 
 def eval():
     df = pd.read_json(ANNOTATIONS_VAL_PATH)
-    df = df[['image', 'question']][:4]
+    df = df[['image', 'question']]
     print("Evaluating on", len(df), "samples\n")
 
     print("Loading model\n")
@@ -119,25 +116,6 @@ def eval():
     model = PaliGemmaForConditionalGeneration.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN).to(device)
     model.eval()
     TEST_BATCH_SIZE = 16
-
-    class TestDataset(Dataset):
-        def __init__(self, dataframe):
-            self.dataframe = dataframe
-
-        def __len__(self):
-            return len(self.dataframe)
-
-        def __getitem__(self, idx):
-            row = self.dataframe.iloc[idx]
-            image_path = VALIDATION_PATH + '/' + row['image']
-            try:
-                image = Image.open(image_path).convert("RGB")
-            except OSError:
-                cvimg = cv2.imread(image_path)
-                image = Image.fromarray(cvimg)
-            question = PROMPT + row['question']
-
-            return image, question
 
     print("Processing samples\n")
     processor = AutoProcessor.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN)

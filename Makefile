@@ -5,14 +5,17 @@ get_data:
 	if [ ! -f ./data/valid.json ]; then gsutil cp gs://dl-common/2024/VQA/valid.json ./data/; fi
 
 setup:
-	@echo "creating data directory..."
+	@echo "Creating data directory..."
 	@if [ ! -d data ]; then mkdir -p data; fi
-	@echo "creating submission directory..."
+	@echo "Creating submission directory..."
 	@if [ ! -d submission ]; then mkdir -p submission; fi
-	@echo "creating .env file..."
+	@echo "Creating .env file..."
 	@if [ ! -f .env ]; then cp .env.example .env; fi
-	@if [ -f data/train.zip ]; then unzip -n data/train.zip -d data/; fi
-	@if [ -f data/valid.zip ]; then unzip -n data/valid.zip -d data/; fi
+	@echo "Unzipping train.zip..."
+	@if [ -f data/train.zip ]; then unzip -qn data/train.zip -d data/; fi
+	@echo "Unzipping valid.zip..."
+	@if [ -f data/valid.zip ]; then unzip -qn data/valid.zip -d data/; fi
+	@echo "Setup complete."
 
 install_packages:
 	@echo "Installing packages..."

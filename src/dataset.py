@@ -5,6 +5,7 @@ from collections import Counter
 import numpy as np
 from tqdm import tqdm
 import Levenshtein as lev
+from src.params import *
 
 
 class VQATrainDataset(Dataset):
@@ -112,3 +113,24 @@ class VQAValDataset(Dataset):
         answers = self.answers[idx]
 
         return image, question, answers
+
+
+
+class TestDataset(Dataset):
+    def __init__(self, dataframe):
+        self.dataframe = dataframe
+
+    def __len__(self):
+        return len(self.dataframe)
+
+    def __getitem__(self, idx):
+        row = self.dataframe.iloc[idx]
+        image_path = VALIDATION_PATH + '/' + row['image']
+        try:
+            image = Image.open(image_path).convert("RGB")
+        except OSError:
+            cvimg = cv2.imread(image_path)
+            image = Image.fromarray(cvimg)
+        question = PROMPT + row['question']
+
+        return image, question
