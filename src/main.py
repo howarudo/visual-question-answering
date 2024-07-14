@@ -53,9 +53,9 @@ def train():
         # "val_check_interval": 0.2, # how many times we want to validate during an epoch
         "check_val_every_n_epoch": 1,
         "gradient_clip_val": 1.0,
-        "accumulate_grad_batches": 8,
+        "accumulate_grad_batches": 16,
         "lr": 1e-4,
-        "batch_size": 4,
+        "batch_size": 2,
         # "seed":2022,
         "num_nodes": 1,
         "warmup_steps": 50,
