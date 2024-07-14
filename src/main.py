@@ -22,7 +22,7 @@ from huggingface_hub import login
 
 def train():
 
-    login()
+    login(token=HF_TOKEN)
 
     ### LOAD DATA ###
     log("Loading data")
