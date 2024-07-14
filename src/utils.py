@@ -7,7 +7,7 @@ from lightning.pytorch.callbacks import Callback
 from colorama import Fore, Style
 
 def log(statement):
-    print("LOG: " + Fore.GREEN + "\n" + statement + "\n" + Style.RESET_ALL)
+    print(Fore.GREEN + "\n" + "LOG: " + statement + "\n" + Style.RESET_ALL)
 
 def load_df(df_path):
     df = pd.read_json(df_path)

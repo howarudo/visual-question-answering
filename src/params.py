@@ -25,4 +25,6 @@ EVAL_REPO_ID = "howarudo/paligemma-3b-pt-224-vqa-continue-ft-0"
 ### CONSTANTS ###
 MAX_LENGTH = 512
 PROMPT = "Answer: "
+TRAIN_BATCH_SIZE = 2
+MAX_TRAIN_EPOCHS = 10
 TEST_BATCH_SIZE = 8
