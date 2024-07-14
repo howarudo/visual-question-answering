@@ -17,8 +17,12 @@ from peft import get_peft_model, LoraConfig
 import lightning as L
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 
+from huggingface_hub import login
+
 
 def train():
+
+    login()
 
     ### LOAD DATA ###
     log("Loading data")
@@ -31,7 +35,7 @@ def train():
 
     ### LOAD MODEL ###
     log("Loading model")
-    processor = AutoProcessor.from_pretrained(MODEL_REPO_ID, token=HUGGINGFACE_TOKEN)
+    processor = AutoProcessor.from_pretrained(MODEL_REPO_ID, token=HF_TOKEN)
     bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
@@ -42,7 +46,7 @@ def train():
         target_modules=["q_proj", "o_proj", "k_proj", "v_proj", "gate_proj", "up_proj", "down_proj"],
         task_type="CAUSAL_LM",
     )
-    model = PaliGemmaForConditionalGeneration.from_pretrained(MODEL_REPO_ID, quantization_config=bnb_config, device_map={"":0}, token=HUGGINGFACE_TOKEN)
+    model = PaliGemmaForConditionalGeneration.from_pretrained(MODEL_REPO_ID, quantization_config=bnb_config, device_map={"":0}, token=HF_TOKEN)
     model = get_peft_model(model, lora_config)
     log("Model loaded")
     print(model.print_trainable_parameters())
@@ -97,12 +101,12 @@ def eval():
     ### LOAD MODEL ###
     log("Loading model")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    model = PaliGemmaForConditionalGeneration.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN).to(device)
+    model = PaliGemmaForConditionalGeneration.from_pretrained(EVAL_REPO_ID, token=HF_TOKEN).to(device)
     model.eval()
 
     ### PROCESS SAMPLES ###
     log("Processing samples")
-    processor = AutoProcessor.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN)
+    processor = AutoProcessor.from_pretrained(EVAL_REPO_ID, token=HF_TOKEN)
     def test_collate_fn(batch):
         images, questions = zip(*batch)
         inputs = processor(text=list(questions), images=list(images), return_tensors="pt", padding=True, tokenize_newline_separately=False)

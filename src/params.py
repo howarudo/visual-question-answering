@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 ### TOKENS ###
-HUGGINGFACE_TOKEN = os.getenv("HUGGINGFACE_TOKEN")
+HF_TOKEN = os.getenv("HF_TOKEN")
 
 
 ### LOCAL DATA PATHS ###
