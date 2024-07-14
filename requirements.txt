@@ -6,3 +6,5 @@ peft
 accelerate
 bitsandbytes
 wandb
+dotenv
+opencv-python
