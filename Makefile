@@ -24,3 +24,7 @@ install_packages:
 evaluate:
 	@echo "Evaluating model..."
 	@python -c 'from src.main import eval; eval()'
+
+train:
+	@echo "Training model..."
+	@python -c 'from src.main import train; train()'
