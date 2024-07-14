@@ -19,19 +19,24 @@ from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 
 
 def train():
+
+    ### LOAD DATA ###
+    log("Loading data")
     train_df = load_df(ANNOTATIONS_TRAIN_PATH)
     val_df = train_df[:100]
 
     train_dataset = VQATrainDataset(train_df, TRAIN_PATH)
     val_dataset = VQAValDataset(val_df, TRAIN_PATH)
-    processor = AutoProcessor.from_pretrained(MODEL_REPO_ID, token=HUGGINGFACE_TOKEN)
+    log(f"Loaded {len(train_dataset)} training samples and {len(val_dataset)} validation samples")
 
+    ### LOAD MODEL ###
+    log("Loading model")
+    processor = AutoProcessor.from_pretrained(MODEL_REPO_ID, token=HUGGINGFACE_TOKEN)
     bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
             bnb_4bit_compute_dtype=torch.bfloat16
     )
-
     lora_config = LoraConfig(
         r=8,
         target_modules=["q_proj", "o_proj", "k_proj", "v_proj", "gate_proj", "up_proj", "down_proj"],
@@ -39,8 +44,11 @@ def train():
     )
     model = PaliGemmaForConditionalGeneration.from_pretrained(MODEL_REPO_ID, quantization_config=bnb_config, device_map={"":0}, token=HUGGINGFACE_TOKEN)
     model = get_peft_model(model, lora_config)
+    log("Model loaded")
     print(model.print_trainable_parameters())
 
+    ### TRAIN ###
+    log("Training model")
     config = {"max_epochs": 15,
         # "val_check_interval": 0.2, # how many times we want to validate during an epoch
         "check_val_every_n_epoch": 1,
@@ -54,11 +62,9 @@ def train():
         "result_path": "./result",
         "verbose": True,
     }
-
     model_module = PaliGemmaModelPLModule(config, processor, model, train_dataset, val_dataset)
     early_stop_callback = EarlyStopping(monitor="vizwiz_accuracy", patience=10, verbose=False, mode="min")
     torch.set_float32_matmul_precision('high')
-
     trainer = L.Trainer(
             accelerator="gpu",
             devices=[0],
