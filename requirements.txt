@@ -1,0 +1,8 @@
+Levenshtein
+git+https://github.com/huggingface/transformers.git
+datasets
+lightning
+peft
+accelerate
+bitsandbytes
+wandb
