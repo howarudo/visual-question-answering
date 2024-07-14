@@ -1,54 +1,31 @@
 from src.utils import *
-from tqdm import tqdm
-from src.dataset import VQATrainDataset, VQAValDataset, TestDataset
-from torch.utils.data import DataLoader
-from transformers import AutoProcessor
-import torch
 from src.params import *
+from src.dataset import VQATrainDataset, VQAValDataset, TestDataset
+from src.model import PaliGemmaModelPLModule
+
 import pandas as pd
 import numpy as np
+import torch
+from tqdm import tqdm
 
+from torch.utils.data import DataLoader
+from transformers import AutoProcessor
 from transformers import PaliGemmaForConditionalGeneration
 from transformers import BitsAndBytesConfig
 from peft import get_peft_model, LoraConfig
 
-from src.model import PaliGemmaModelPLModule
-
 import lightning as L
-from lightning.pytorch.callbacks import Callback
 from lightning.pytorch.callbacks.early_stopping import EarlyStopping
 
-from huggingface_hub import HfApi
 
-api = HfApi()
-
-class PushToHubCallback(Callback):
-    def on_train_epoch_end(self, trainer, pl_module):
-        print(f"Pushing model to the hub, epoch {trainer.current_epoch}")
-        pl_module.processor.push_to_hub(FINETUNED_MODEL_ID + "-" + f"{trainer.current_epoch}",
-                                    commit_message=f"Training in progress, epoch {trainer.current_epoch}",
-        )
-        pl_module.model.push_to_hub(FINETUNED_MODEL_ID + "-" + f"{trainer.current_epoch}",
-                                    commit_message=f"Training in progress, epoch {trainer.current_epoch}",
-        )
-
-    def on_train_end(self, trainer, pl_module):
-        print(f"Pushing model to the hub after training")
-        pl_module.processor.push_to_hub(FINETUNED_MODEL_ID,
-                                    commit_message=f"Training done")
-        pl_module.model.push_to_hub(FINETUNED_MODEL_ID,
-                                    commit_message=f"Training done",
-                                    revision=f"final",
-                                    )
 def train():
     train_df = load_df(ANNOTATIONS_TRAIN_PATH)
     val_df = train_df[:100]
 
     train_dataset = VQATrainDataset(train_df, TRAIN_PATH)
     val_dataset = VQAValDataset(val_df, TRAIN_PATH)
-    processor = AutoProcessor.from_pretrained(MODEL_REPO_ID)
+    processor = AutoProcessor.from_pretrained(MODEL_REPO_ID, token=HUGGINGFACE_TOKEN)
 
-    # use this for Q-LoRa
     bnb_config = BitsAndBytesConfig(
             load_in_4bit=True,
             bnb_4bit_quant_type="nf4",
@@ -60,7 +37,7 @@ def train():
         target_modules=["q_proj", "o_proj", "k_proj", "v_proj", "gate_proj", "up_proj", "down_proj"],
         task_type="CAUSAL_LM",
     )
-    model = PaliGemmaForConditionalGeneration.from_pretrained(MODEL_REPO_ID, quantization_config=bnb_config, device_map={"":0})
+    model = PaliGemmaForConditionalGeneration.from_pretrained(MODEL_REPO_ID, quantization_config=bnb_config, device_map={"":0}, token=HUGGINGFACE_TOKEN)
     model = get_peft_model(model, lora_config)
     print(model.print_trainable_parameters())
 
@@ -99,17 +76,26 @@ def train():
 
 
 def eval():
+    """
+    Evaluates the model on the test dataset and saves the submission file.
+    The model used is specified in EVAL_REPO_ID. (see src/params.py)
+    """
+    log(f"Evaluating model with ID {EVAL_REPO_ID}")
+
+    ### LOAD DATA ###
     df = pd.read_json(ANNOTATIONS_VAL_PATH)
     df = df[['image', 'question']]
-    print("Evaluating on", len(df), "samples\n")
+    log(f"Loaded {len(df)} samples")
 
-    print("Loading model\n")
+    ### LOAD MODEL ###
+    log("Loading model")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = PaliGemmaForConditionalGeneration.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN).to(device)
     model.eval()
     TEST_BATCH_SIZE = 8
 
-    print("Processing samples\n")
+    ### PROCESS SAMPLES ###
+    log("Processing samples")
     processor = AutoProcessor.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN)
     def test_collate_fn(batch):
         images, questions = zip(*batch)
@@ -120,7 +106,8 @@ def eval():
     data_loader = DataLoader(TestDataset(df), batch_size=TEST_BATCH_SIZE, collate_fn=test_collate_fn)
     torch.cuda.empty_cache()
 
-    print("Processing batches\n")
+    ### EVALUATE ###
+    log("Processing batches")
     model_answers = []
     with torch.no_grad():
         for inputs in tqdm(data_loader, desc="Processing batches"):
@@ -129,6 +116,7 @@ def eval():
             model_answers.extend([process_pred(ans.split("\n")[1]) for ans in generated_text])
             torch.cuda.empty_cache()
 
-    print("Saving submission\n")
+    ### SAVE SUBMISSION ###
+    log("Saving submission")
     submission = np.array(model_answers)
     np.save(OUTPUT_PATH + '/submission.npy', submission)

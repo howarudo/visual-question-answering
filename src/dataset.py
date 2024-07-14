@@ -1,11 +1,12 @@
+from src.params import *
+
+import numpy as np
 from torch.utils.data import Dataset
 from PIL import Image
 import cv2
 from collections import Counter
-import numpy as np
 from tqdm import tqdm
 import Levenshtein as lev
-from src.params import *
 
 
 class VQATrainDataset(Dataset):

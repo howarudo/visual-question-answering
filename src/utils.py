@@ -1,7 +1,13 @@
+from src.params import *
+
 import pandas as pd
 import torch
 import re
-from src.params import PROMPT, MAX_LENGTH
+from lightning.pytorch.callbacks import Callback
+from colorama import Fore, Style
+
+def log(statement):
+    print(Fore.GREEN + "\n" + statement + "\n" + Style.RESET_ALL)
 
 def load_df(df_path):
     df = pd.read_json(df_path)
@@ -66,9 +72,22 @@ def VQA_eval(pred, answers):
 
     return acc / 10
 
+
 def process_pred(pred):
     pred = re.sub(r"(?:(?<=>) | (?=</s_))", "", pred)
     if "unanswer" in pred:
         pred = "unanswerable"
 
     return pred
+
+
+class PushToHubCallback(Callback):
+    def on_train_epoch_end(self, trainer, pl_module):
+        print(f"Pushing model to the hub, epoch {trainer.current_epoch}")
+        pl_module.processor.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training in progress, epoch {trainer.current_epoch}", revision=f"epoch_{trainer.current_epoch}")
+        pl_module.model.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training in progress, epoch {trainer.current_epoch}", revision=f"epoch_{trainer.current_epoch}")
+
+    def on_train_end(self, trainer, pl_module):
+        print(f"Pushing model to the hub after training")
+        pl_module.processor.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training done")
+        pl_module.model.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training done", revision=f"final")
