@@ -5,6 +5,8 @@ setup:
 	@mkdir -p submission
 	@echo "creating .env file..."
 	@cp .env.example .env
+	@unzip data/train-001.zip -d data
+	@unzip data/valid-002.zip -d data
 
 install_packages:
 	@echo "Installing packages..."
