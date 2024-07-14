@@ -58,7 +58,7 @@ def train():
         "check_val_every_n_epoch": 1,
         "gradient_clip_val": 1.0,
         "accumulate_grad_batches": 16,
-        "lr": 1e-4,
+        "lr": 1e-5,
         "batch_size": TRAIN_BATCH_SIZE,
         # "seed":2022,
         "num_nodes": 1,

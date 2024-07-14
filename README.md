@@ -50,7 +50,9 @@ This command will evaluate model that was implemented previously and saved in [h
 make evaluate
 ```
 
-6. WIP: Train from `src`
+6. Train from `src`
+
+First, you have to add HF_TOKEN and edit the HF_PATH to be pushed in `params.py` (FINETUNED_MODEL_ID).
 ```bash
 make train
 ```
