@@ -80,6 +80,7 @@ def eval():
     Evaluates the model on the test dataset and saves the submission file.
     The model used is specified in EVAL_REPO_ID. (see src/params.py)
     """
+
     log(f"Evaluating model with ID {EVAL_REPO_ID}")
 
     ### LOAD DATA ###
@@ -92,7 +93,6 @@ def eval():
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     model = PaliGemmaForConditionalGeneration.from_pretrained(EVAL_REPO_ID, token=HUGGINGFACE_TOKEN).to(device)
     model.eval()
-    TEST_BATCH_SIZE = 8
 
     ### PROCESS SAMPLES ###
     log("Processing samples")

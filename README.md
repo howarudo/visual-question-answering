@@ -1,5 +1,16 @@
 # Visual Question Answering
 
+VizWiz VQA final challenge for Matsuo-Iwasawa lab's Deep Learning Fundamentals course.
+
+## Report
+Report can be found [here](report/report.pdf).
+
+## Notebooks
+Notebooks can be found [here](notebooks).
+These notebooks are meant to run in Google Colab environment and is mainly used in this implementation.
+
+Although only PaliGemma fine-tuning was implemented in `src`, you can find implementation of CLIP models in `notebooks`.
+
 ## Implementation
 1. Download necessary data
 
