@@ -5,6 +5,8 @@ VizWiz VQA final challenge for Matsuo-Iwasawa lab's Deep Learning Fundamentals c
 ## Report
 Report can be found [here](report/report.pdf).
 
+The best result is stored in [submission](submission/submitted.npy), which achieved an accuracy of 0.72783 in the test dataset.
+
 ## Notebooks
 Notebooks can be found [here](notebooks).
 These notebooks are meant to run in Google Colab environment and is mainly used in this implementation.
@@ -46,4 +48,9 @@ make install_packages
 This command will evaluate model that was implemented previously and saved in [howarudo's hugging face repo](https://huggingface.co/howarudo/paligemma-3b-pt-224-vqa-continue-ft-0).
 ```bash
 make evaluate
+```
+
+6. WIP: Train from `src`
+```bash
+make train
 ```
