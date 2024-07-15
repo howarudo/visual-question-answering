@@ -84,10 +84,12 @@ def process_pred(pred):
 class PushToHubCallback(Callback):
     def on_train_epoch_end(self, trainer, pl_module):
         print(f"Pushing model to the hub, epoch {trainer.current_epoch}")
+        trainer.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training in progress, epoch {trainer.current_epoch}", revision=f"epoch_{trainer.current_epoch}")
         pl_module.processor.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training in progress, epoch {trainer.current_epoch}", revision=f"epoch_{trainer.current_epoch}")
         pl_module.model.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training in progress, epoch {trainer.current_epoch}", revision=f"epoch_{trainer.current_epoch}")
 
     def on_train_end(self, trainer, pl_module):
         print(f"Pushing model to the hub after training")
+        trainer.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training done")
         pl_module.processor.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training done")
-        pl_module.model.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training done", revision=f"final")
+        pl_module.model.push_to_hub(FINETUNED_MODEL_ID, commit_message=f"Training done")
