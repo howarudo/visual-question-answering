@@ -87,47 +87,26 @@ class PushToHubCallback(Callback):
 
     def on_train_epoch_end(self, trainer, pl_module):
         print(f"Pushing model to the hub, epoch {trainer.current_epoch}")
-        # Save and push model
-        pl_module.model.save_pretrained(self.model_id)
         pl_module.model.push_to_hub(
             self.model_id,
             commit_message=f"Training in progress, epoch {trainer.current_epoch}",
             revision=f"epoch_{trainer.current_epoch}"
         )
-        # Save and push tokenizer
-        pl_module.tokenizer.save_pretrained(self.model_id)
-        pl_module.tokenizer.push_to_hub(
+        pl_module.processor.push_to_hub(
             self.model_id,
             commit_message=f"Training in progress, epoch {trainer.current_epoch}",
             revision=f"epoch_{trainer.current_epoch}"
         )
-        # Save and push processor if it exists
-        if hasattr(pl_module, 'processor'):
-            pl_module.processor.save_pretrained(self.model_id)
-            pl_module.processor.push_to_hub(
-                self.model_id,
-                commit_message=f"Training in progress, epoch {trainer.current_epoch}",
-                revision=f"epoch_{trainer.current_epoch}"
-            )
 
     def on_train_end(self, trainer, pl_module):
         print("Pushing model to the hub after training")
         # Save and push model
-        pl_module.model.save_pretrained(self.model_id)
         pl_module.model.push_to_hub(
             self.model_id,
             commit_message="Training done"
         )
-        # Save and push tokenizer
-        pl_module.tokenizer.save_pretrained(self.model_id)
-        pl_module.tokenizer.push_to_hub(
+        # Save and push processor if it exists
+        pl_module.processor.push_to_hub(
             self.model_id,
             commit_message="Training done"
         )
-        # Save and push processor if it exists
-        if hasattr(pl_module, 'processor'):
-            pl_module.processor.save_pretrained(self.model_id)
-            pl_module.processor.push_to_hub(
-                self.model_id,
-                commit_message="Training done"
-            )
