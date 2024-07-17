@@ -19,7 +19,7 @@ OUTPUT_PATH = 'submission'
 ### HUGGINGFACE REPO IDs ###
 MODEL_REPO_ID = "google/paligemma-3b-pt-224"
 FINETUNED_MODEL_ID = "howarudo/paligemma-vqa-sub-ft"
-EVAL_REPO_ID = "howarudo/paligemma-3b-pt-224-vqa-continue-ft-0"
+EVAL_REPO_ID = "howarudo/paligemma-vqa-ft-colab-3e4-epoch_1"
 
 
 ### CONSTANTS ###
